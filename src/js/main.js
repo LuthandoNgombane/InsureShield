@@ -3,10 +3,12 @@
  * Entry point for Week 5 application logic.
  */
 
+import '../styles/main.css';
+
 import { evaluateItemRisk } from './aiRiskService.js';
 import { calculatePremium } from './quoteCalculator.js';
 import { renderLoading, renderQuoteResult } from './uiRenderer.js';
-import { convertFromUSD } from './currencyService.js';
+// import { convertFromUSD } from './currencyService.js';
 
 document.addEventListener("DOMContentLoaded", () => {
   const quoteForm = document.getElementById("quick-quote-form");

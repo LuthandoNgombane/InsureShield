@@ -1,13 +1,98 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>insureshield</title>
+    <title>InsureShield - Micro-Insurance Calculator</title>
   </head>
   <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.js"></script>
+    <!-- App Header -->
+    <header class="app-header">
+      <div class="container header-content">
+        <div class="logo-group">
+          <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <span class="brand-title">InsureShield</span>
+        </div>
+        <nav class="main-nav">
+          <a href="#" class="nav-link active">Calculator</a>
+          <a href="#" class="nav-link">Policies</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Main Content Layout -->
+    <main class="main-content container">
+      <section class="hero-section">
+        <h1>AI-Powered Micro-Insurance Quotes</h1>
+        <p class="subtitle">Instant risk evaluation and premium calculations for your valuables.</p>
+      </section>
+
+      <div class="calculator-grid">
+        <!-- Quote Form Card -->
+        <div class="card">
+          <h2>Get Quick Quote</h2>
+          <form id="quick-quote-form">
+            <div class="form-group">
+              <label for="item-category">Item Category</label>
+              <select id="item-category" required>
+                <option value="">Select Category...</option>
+                <option value="Laptop">Laptop / Computer</option>
+                <option value="Camera">Camera / Photography</option>
+                <option value="Musical Instrument">Musical Instrument</option>
+                <option value="Smartphone">Smartphone / Tablet</option>
+                <option value="Other">Other Equipment</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="item-description">Description & Condition</label>
+              <textarea id="item-description" rows="3" placeholder="e.g., MacBook Pro M2 in hard case, excellent condition..." required></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="item-value">Declared Value (USD)</label>
+              <input type="number" id="item-value" min="10" step="10" placeholder="1200" required />
+            </div>
+
+            <div class="form-group">
+              <label for="item-usecase">Usage Scenario</label>
+              <select id="item-usecase" required>
+                <option value="Local Indoor Studio">Local Indoor Studio</option>
+                <option value="Daily Commute">Daily Commute</option>
+                <option value="Outdoor Event / Gig">Outdoor Event / Gig</option>
+                <option value="International Travel">International Travel</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="item-duration">Coverage Duration (Days)</label>
+              <input type="number" id="item-duration" min="1" max="365" value="7" required />
+            </div>
+
+            <button type="submit" class="btn btn-primary full-width">Calculate AI Quote</button>
+          </form>
+        </div>
+
+        <!-- Result Card Container -->
+        <div class="card">
+          <h2>Quote Assessment</h2>
+          <div id="quote-result-container" class="result-placeholder">
+            <div class="empty-state">
+              <p>Fill in the item details and submit to generate your custom AI risk evaluation and coverage quote.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- App Footer -->
+    <footer class="app-footer">
+      <p>&copy; 2026 InsureShield. Smart Micro-Insurance Engine.</p>
+    </footer>
+
+    <!-- Vite Entry Script -->
+    <script type="module" src="/src/js/main.js"></script>
   </body>
 </html>
