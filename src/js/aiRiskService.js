@@ -3,9 +3,8 @@
  * Handles communication with the Google Gemini REST API to evaluate item risk.
  */
 
-// Access the API key defined in your .env file via Vite environment variables
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
 /**
  * Evaluates the risk score and details for an insurance item request.
@@ -22,7 +21,6 @@ export async function evaluateItemRisk(itemData) {
     throw new Error("Missing Gemini API Key. Please verify your .env file.");
   }
 
-  // System instruction / prompt forcing strict JSON output
   const prompt = `
     You are an expert micro-insurance underwriting system. 
     Analyze the following item details and scenario for micro-insurance coverage:
@@ -57,36 +55,30 @@ export async function evaluateItemRisk(itemData) {
             parts: [{ text: prompt }]
           }
         ],
-        // Setting responseMimeType forces Gemini to output valid JSON
         generationConfig: {
           responseMimeType: "application/json",
-          temperature: 0.2 // Lower temperature for consistent, structured outputs
+          temperature: 0.2
         }
       })
     });
 
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(`Gemini API Error: ${errorData.error?.message || response.statusText}`);
+      throw new Error(`Gemini API Error (${response.status}): ${errorData.error?.message || response.statusText}`);
     }
 
     const data = await response.json();
-    
-    // Extract the raw text response from the API payload
     const rawText = data.candidates?.[0]?.content?.parts?.[0]?.text;
 
     if (!rawText) {
       throw new Error("Empty response received from Gemini API.");
     }
 
-    // Parse the JSON string into a JavaScript object
-    const structuredAssessment = JSON.parse(rawText);
-    return structuredAssessment;
+    return JSON.parse(rawText);
 
   } catch (error) {
     console.error("Failed to generate AI Risk Assessment:", error);
     
-    // Fallback object in case of network issues or rate limits
     return {
       risk_score: 50,
       risk_tier: "Medium",

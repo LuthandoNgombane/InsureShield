@@ -11,10 +11,12 @@ import { createPolicy, refreshPolicyStatuses } from './policyModel.js';
 import { validateItemDetails, validateCoverageParams } from './formValidator.js';
 import { evaluateClaim } from './aiClaimService.js';
 import { renderLoading, renderQuoteResult, renderPolicyDashboard } from './uiRenderer.js';
+import { loadPartials } from './partialsLoader.js';
 
 let currentQuoteData = null;
 
 document.addEventListener("DOMContentLoaded", () => {
+  loadPartials();
   const quoteForm = document.getElementById("quick-quote-form");
   const quoteResultContainer = document.getElementById("quote-result-container");
   const dashboardContainer = document.getElementById("policies-dashboard");
