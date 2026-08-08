@@ -4,7 +4,7 @@
  */
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const GEMINI_API_URL = `[https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$](https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=$){API_KEY}`;
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
 
 /**
  * Evaluates an insurance claim submission.
@@ -55,7 +55,8 @@ export async function evaluateClaim(policy, claimIncident, claimedAmount) {
     });
 
     if (!response.ok) {
-      throw new Error("Gemini Claim Evaluation failed.");
+      const errorData = await response.json();
+      throw new Error(`Gemini API Error (${response.status}): ${errorData.error?.message || response.statusText}`);
     }
 
     const data = await response.json();

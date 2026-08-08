@@ -7,8 +7,10 @@ import '../styles/main.css';
 import { refreshPolicyStatuses } from './policyModel.js';
 import { evaluateClaim } from './aiClaimService.js';
 import { renderPolicyDashboard } from './uiRenderer.js';
+import { loadPartials } from './partialsLoader.js';
 
 document.addEventListener("DOMContentLoaded", () => {
+  loadPartials();
   const dashboardContainer = document.getElementById("policies-dashboard");
 
   if (!dashboardContainer) return;
