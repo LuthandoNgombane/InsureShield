@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>InsureShield - My Active Policies</title>
+  </head>
+  <body>
+    <!-- App Header -->
+    <header class="app-header">
+      <div class="container header-content">
+        <div class="logo-group">
+          <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+          <span class="brand-title">InsureShield</span>
+        </div>
+        <nav class="main-nav">
+          <a href="/" class="nav-link">Calculator</a>
+          <a href="/src/policies/" class="nav-link active">Policies</a>
+        </nav>
+      </div>
+    </header>
+
+    <!-- Main Content Layout -->
+    <main class="main-content container">
+      <section class="hero-section">
+        <h1>Active Policy Dashboard</h1>
+        <p class="subtitle">Monitor active micro-insurance coverage, countdowns, and submit AI claims.</p>
+      </section>
+
+      <!-- Dashboard Cards Container -->
+      <div id="policies-dashboard"></div>
+    </main>
+
+    <!-- App Footer -->
+    <footer class="app-footer">
+      <p>&copy; 2026 InsureShield. Smart Micro-Insurance Engine.</p>
+    </footer>
+
+    <!-- Entry script for the dashboard -->
+    <script type="module" src="/src/js/policyDashboard.js"></script>
+  </body>
+</html>
