@@ -1,32 +1,24 @@
 /**
  * partialLoader.js
- * Asynchronously fetches HTML partials and injects them into the DOM.
+ * Injects HTML partials directly at build time using Vite raw imports.
  */
 
-export async function loadPartials() {
+import headerHtml from '../partials/header.html?raw';
+import footerHtml from '../partials/footer.html?raw';
+
+export function loadPartials() {
   const headerContainer = document.querySelector(".app-header");
   const footerContainer = document.querySelector(".app-footer");
 
-  try {
-    // Fetch partials concurrently
-    const [headerResponse, footerResponse] = await Promise.all([
-      fetch("/src/partials/header.html"),
-      fetch("/src/partials/footer.html")
-    ]);
-
-    if (headerContainer && headerResponse.ok) {
-      headerContainer.innerHTML = await headerResponse.text();
-    }
-
-    if (footerContainer && footerResponse.ok) {
-      footerContainer.innerHTML = await footerResponse.text();
-    }
-
-    // Highlight active nav link based on URL route
-    highlightActiveNav();
-  } catch (error) {
-    console.error("Failed to load layout partials:", error);
+  if (headerContainer) {
+    headerContainer.innerHTML = headerHtml;
   }
+
+  if (footerContainer) {
+    footerContainer.innerHTML = footerHtml;
+  }
+
+  highlightActiveNav();
 }
 
 function highlightActiveNav() {
@@ -36,7 +28,6 @@ function highlightActiveNav() {
   navLinks.forEach((link) => {
     const href = link.getAttribute("href");
     
-    // Check if link matches current path
     if (href === currentPath || (currentPath.includes("/policies/") && href.includes("/policies/"))) {
       link.classList.add("active");
     } else {
