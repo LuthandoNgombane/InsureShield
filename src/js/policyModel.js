@@ -95,3 +95,21 @@ export function refreshPolicyStatuses() {
 
   return refreshed;
 }
+
+/**
+ * Deletes a policy from localStorage by ID.
+ * @param {string} policyId 
+ * @returns {boolean} Success status
+ */
+export function deletePolicy(policyId) {
+  const policies = getAllPolicies();
+  const filtered = policies.filter((p) => p.id !== policyId);
+  
+  if (filtered.length !== policies.length) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered));
+    return true;
+  }
+  return false;
+}
+
+

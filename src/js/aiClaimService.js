@@ -4,16 +4,17 @@
  */
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
 
 /**
  * Evaluates an insurance claim submission.
  * @param {Object} policy - Policy object.
  * @param {string} claimIncident - Description of what happened.
  * @param {number} claimedAmount - Amount requested.
+ * @param {string} [currency="USD"] - ISO currency code
  * @returns {Promise<Object>}
  */
-export async function evaluateClaim(policy, claimIncident, claimedAmount) {
+export async function evaluateClaim(policy, claimIncident, claimedAmount, currency = "USD") {
   if (!API_KEY) {
     throw new Error("Missing Gemini API Key. Check .env file.");
   }
@@ -23,12 +24,12 @@ export async function evaluateClaim(policy, claimIncident, claimedAmount) {
     
     Policy Context:
     - Item: ${policy.category} - ${policy.description}
-    - Declared Value: $${policy.value}
+    - Declared Value: ${currency} ${policy.value}
     - Allowed Usage Scenario: ${policy.useCase}
     
     Claim Incident:
     - User Incident Description: "${claimIncident}"
-    - Amount Claimed: $${claimedAmount} USD
+    - Amount Claimed: ${currency} ${claimedAmount}
 
     Evaluate validity, policy compliance, and likelihood of fraud. Return strictly raw JSON.
 
@@ -48,8 +49,7 @@ export async function evaluateClaim(policy, claimIncident, claimedAmount) {
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
-          responseMimeType: "application/json",
-          temperature: 0.1
+          responseMimeType: "application/json"
         }
       })
     });
