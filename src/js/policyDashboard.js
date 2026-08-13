@@ -12,14 +12,35 @@ import { loadPartials } from './partialsLoader.js';
 document.addEventListener("DOMContentLoaded", () => {
   loadPartials();
   const dashboardContainer = document.getElementById("policies-dashboard");
+  const searchInput = document.getElementById("search-input");
+  const statusFilter = document.getElementById("status-filter");
 
   if (!dashboardContainer) return;
 
-  function loadDashboard() {
-    const policies = refreshPolicyStatuses();
-    // Passed handleCancelPolicy as 4th argument
-    renderPolicyDashboard(dashboardContainer, policies, handleClaimSubmission, handleCancelPolicy);
+ function loadDashboard() {
+    const allPolicies = refreshPolicyStatuses();
+
+    // Apply Search & Filter Criteria (Week 7)
+    const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : "";
+    const selectedStatus = statusFilter ? statusFilter.value : "All";
+
+    const filteredPolicies = allPolicies.filter((policy) => {
+      const matchesSearch = 
+        policy.id.toLowerCase().includes(searchTerm) ||
+        policy.category.toLowerCase().includes(searchTerm) ||
+        policy.description.toLowerCase().includes(searchTerm);
+
+      const matchesStatus = selectedStatus === "All" || policy.status === selectedStatus;
+
+      return matchesSearch && matchesStatus;
+    });
+
+    renderPolicyDashboard(dashboardContainer, filteredPolicies, handleClaimSubmission, handleCancelPolicy);
   }
+
+  // Attach filter event listeners
+  if (searchInput) searchInput.addEventListener("input", loadDashboard);
+  if (statusFilter) statusFilter.addEventListener("change", loadDashboard);
 
   function handleCancelPolicy(policyId) {
     const confirmed = confirm(`Are you sure you want to cancel policy ${policyId}? This action will permanently delete the coverage from local storage.`);

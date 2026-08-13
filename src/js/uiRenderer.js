@@ -3,7 +3,7 @@
  * Handles UI rendering, status cards, policy lists, countdown timers, and claim dialogs.
  */
 
-import { fetchExchangeRates } from './currencyService.js'; // Import rates fetcher[cite: 3]
+import { fetchExchangeRates } from './currencyService.js';
 
 let timerIntervals = {};
 
@@ -82,14 +82,14 @@ export async function renderPolicyDashboard(container, policies, onClaimClick, o
     return;
   }
 
-  // Fetch exchange rates to perform USD conversions for display[cite: 3]
-  const rates = await fetchExchangeRates(); //[cite: 3]
+  // Fetch exchange rates to perform USD conversions for display
+  const rates = await fetchExchangeRates(); 
 
   container.innerHTML = policies
     .map((policy) => {
       const code = policy.currency || "USD";
       const symbol = CURRENCY_SYMBOLS[code] || "$";
-      const rate = rates[code] || 1; // Rate relative to USD[cite: 3]
+      const rate = rates[code] || 1;
 
       // Convert values to USD if non-USD currency
       const valUSD = code !== "USD" ? ` (USD $${(policy.value / rate).toFixed(2)})` : "";
@@ -123,6 +123,7 @@ export async function renderPolicyDashboard(container, policies, onClaimClick, o
                    <button class="btn btn-danger btn-cancel" data-policy-id="${policy.id}" style="background-color: #dc3545; color: white;">Cancel Policy</button>`
                 : `<button class="btn btn-disabled" disabled>Policy Ended</button>`
             }
+            <button class="btn btn-export" data-policy-id="${policy.id}" style="background-color: #0d6efd; color: white;">📄 Export Receipt</button>
           </div>
         </div>
       `;
@@ -147,6 +148,16 @@ export async function renderPolicyDashboard(container, policies, onClaimClick, o
     });
   });
 
+  // Attach event listeners for exporting policy documents
+  container.querySelectorAll(".btn-export").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const pId = e.target.getAttribute("data-policy-id");
+      const policy = policies.find((p) => p.id === pId);
+      if (policy) {
+        exportPolicyDocument(policy);
+      }
+    });
+  });
 
   // Start active timers
   policies.forEach((policy) => {
@@ -154,6 +165,19 @@ export async function renderPolicyDashboard(container, policies, onClaimClick, o
       startCountdownTimer(policy.id, policy.endDate);
     }
   });
+}
+
+/**
+ * Downloads policy document receipt as a structured JSON file (Week 7).
+ */
+export function exportPolicyDocument(policy) {
+  const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(policy, null, 2));
+  const downloadAnchor = document.createElement("a");
+  downloadAnchor.setAttribute("href", dataStr);
+  downloadAnchor.setAttribute("download", `InsureShield_Policy_${policy.id}.json`);
+  document.body.appendChild(downloadAnchor);
+  downloadAnchor.click();
+  downloadAnchor.remove();
 }
 
 /**
