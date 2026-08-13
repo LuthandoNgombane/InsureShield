@@ -4,22 +4,25 @@
  */
 
 const API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${API_KEY}`;
+const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
 
 /**
  * Evaluates the risk score and details for an insurance item request.
  * 
  * @param {Object} itemData - The user-provided item details.
- * @param {string} itemData.category - Category (e.g., Camera, Laptop, Musical Instrument).
- * @param {string} itemData.description - Detailed description and condition of the item.
- * @param {number} itemData.value - Declared cash value in USD.
- * @param {string} itemData.useCase - Intended usage scenario (e.g., local studio, outdoor gig, travel).
- * @returns {Promise<Object>} The structured JSON assessment object.
+ * @param {string} itemData.category
+ * @param {string} itemData.description
+ * @param {number} itemData.value
+ * @param {string} itemData.useCase
+ * @param {string} [itemData.currency="USD"] - ISO currency code (e.g., ZAR, USD, EUR)
+ * @returns {Promise<Object>}
  */
 export async function evaluateItemRisk(itemData) {
   if (!API_KEY) {
     throw new Error("Missing Gemini API Key. Please verify your .env file.");
   }
+
+  const currency = itemData.currency || "USD";
 
   const prompt = `
     You are an expert micro-insurance underwriting system. 
@@ -27,17 +30,17 @@ export async function evaluateItemRisk(itemData) {
     
     - Category: ${itemData.category}
     - Description: ${itemData.description}
-    - Declared Value: $${itemData.value} USD
+    - Declared Value: ${currency} ${itemData.value}
     - Usage Scenario: ${itemData.useCase}
 
-    Evaluate the risks (theft, physical damage, portability hazard) and return your assessment strictly as a raw JSON object with no markdown formatting or extra commentary. 
+    Evaluate the risks (theft, physical damage, portability hazard) considering local contextual values for ${currency}. Return your assessment strictly as a raw JSON object with no markdown formatting or extra commentary. 
 
     The JSON response MUST match this exact schema:
     {
       "risk_score": <number between 1 and 100>,
       "risk_tier": "<'Low' | 'Medium' | 'High'>",
       "explanation": "<short 2-sentence rationale for the risk score>",
-      "recommended_deductible": <number, suggested deductible in USD>,
+      "recommended_deductible": <number, suggested deductible in ${currency}>,
       "fraud_risk_flag": <boolean>,
       "suggested_terms": "<short advice on coverage conditions>"
     }
@@ -46,15 +49,9 @@ export async function evaluateItemRisk(itemData) {
   try {
     const response = await fetch(GEMINI_API_URL, {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        contents: [
-          {
-            parts: [{ text: prompt }]
-          }
-        ],
+        contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
           responseMimeType: "application/json",
           temperature: 0.2

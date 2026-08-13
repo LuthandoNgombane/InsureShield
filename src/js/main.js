@@ -1,19 +1,27 @@
 /**
  * main.js
- * Application entry point for InsureShield (Week 6)
+ * Application entry point for InsureShield
  */
 
 import '../styles/main.css';
 
 import { evaluateItemRisk } from './aiRiskService.js';
 import { calculatePremium } from './quoteCalculator.js';
-import { createPolicy, refreshPolicyStatuses } from './policyModel.js';
+import { createPolicy, refreshPolicyStatuses, deletePolicy } from './policyModel.js';
 import { validateItemDetails, validateCoverageParams } from './formValidator.js';
 import { evaluateClaim } from './aiClaimService.js';
+import { convertFromUSD } from './currencyService.js';
 import { renderLoading, renderQuoteResult, renderPolicyDashboard } from './uiRenderer.js';
 import { loadPartials } from './partialsLoader.js';
 
 let currentQuoteData = null;
+
+const CURRENCY_SYMBOLS = {
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+  ZAR: "R"
+};
 
 document.addEventListener("DOMContentLoaded", () => {
   loadPartials();
@@ -28,12 +36,15 @@ document.addEventListener("DOMContentLoaded", () => {
     quoteForm.addEventListener("submit", async (event) => {
       event.preventDefault();
 
+      const selectedCurrency = document.getElementById("currency-select")?.value || "USD";
+
       const itemData = {
         category: document.getElementById("item-category").value,
         description: document.getElementById("item-description").value,
         value: parseFloat(document.getElementById("item-value").value),
         useCase: document.getElementById("item-usecase").value,
-        durationDays: parseInt(document.getElementById("item-duration").value, 10)
+        durationDays: parseInt(document.getElementById("item-duration").value, 10),
+        currency: selectedCurrency
       };
 
       // Form Validations
@@ -51,9 +62,25 @@ document.addEventListener("DOMContentLoaded", () => {
         const aiAssessment = await evaluateItemRisk(itemData);
         const quote = calculatePremium(itemData.value, itemData.durationDays, aiAssessment.risk_score);
 
-        currentQuoteData = { ...itemData, aiAssessment, quote };
+        // Fetch selected currency and convert quote metrics
+        const currencySelect = document.getElementById("currency-select");
+        const selectedCurrency = currencySelect ? currencySelect.value : "USD";
+        
+        const convertedPremium = await convertFromUSD(quote.totalPremiumUSD, selectedCurrency);
+        const convertedDailyRate = await convertFromUSD(quote.dailyRateUSD, selectedCurrency);
+        const convertedDeductible = await convertFromUSD(quote.estimatedDeductibleUSD, selectedCurrency);
 
-        renderQuoteResult(quoteResultContainer, aiAssessment, quote);
+        const convertedQuote = {
+          ...quote,
+          totalPremiumUSD: convertedPremium,
+          dailyRateUSD: convertedDailyRate,
+          estimatedDeductibleUSD: convertedDeductible
+        };
+
+        currentQuoteData = { ...itemData, aiAssessment, quote: convertedQuote, currency: selectedCurrency };
+
+        const currencySymbol = CURRENCY_SYMBOLS[selectedCurrency] || "$";
+        renderQuoteResult(quoteResultContainer, aiAssessment, convertedQuote, currencySymbol);
 
         // Bind checkout purchase action
         const checkoutBtn = document.getElementById("btn-proceed-checkout");
@@ -79,7 +106,7 @@ document.addEventListener("DOMContentLoaded", () => {
   function loadDashboard() {
     if (!dashboardContainer) return;
     const policies = refreshPolicyStatuses();
-    renderPolicyDashboard(dashboardContainer, policies, handleClaimSubmission);
+    renderPolicyDashboard(dashboardContainer, policies, handleClaimSubmission, handleCancelPolicy);
   }
 
   async function handleClaimSubmission(policyId) {
@@ -104,4 +131,15 @@ document.addEventListener("DOMContentLoaded", () => {
       alert(`Claim Denied/Flagged. Reason: ${claimResult.decision_reason}`);
     }
   }
+
+  
+  function handleCancelPolicy(policyId) {
+    const confirmed = confirm(`Are you sure you want to cancel policy ${policyId}?`);
+    if (confirmed) {
+      deletePolicy(policyId);
+      loadDashboard();
+    }
+  }
+
 });
+

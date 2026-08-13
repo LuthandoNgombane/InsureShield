@@ -3,7 +3,16 @@
  * Handles UI rendering, status cards, policy lists, countdown timers, and claim dialogs.
  */
 
+import { fetchExchangeRates } from './currencyService.js'; // Import rates fetcher[cite: 3]
+
 let timerIntervals = {};
+
+const CURRENCY_SYMBOLS = {
+  USD: "$",
+  EUR: "€",
+  GBP: "£",
+  ZAR: "R"
+};
 
 export function renderLoading(containerElement, message = "Analyzing with AI...") {
   containerElement.innerHTML = `
@@ -57,8 +66,9 @@ export function renderQuoteResult(containerElement, assessment, quote, currencyS
  * @param {HTMLElement} container 
  * @param {Array<Object>} policies 
  * @param {Function} onClaimClick 
+ * @param {Function} onCancelClick  
  */
-export function renderPolicyDashboard(container, policies, onClaimClick) {
+export async function renderPolicyDashboard(container, policies, onClaimClick, onCancelClick) {
   // Clear any existing active countdown intervals
   Object.values(timerIntervals).forEach(clearInterval);
   timerIntervals = {};
@@ -72,39 +82,51 @@ export function renderPolicyDashboard(container, policies, onClaimClick) {
     return;
   }
 
-  container.innerHTML = policies
-    .map(
-      (policy) => `
-      <div class="card policy-card status-${policy.status.toLowerCase()}" id="policy-${policy.id}">
-        <div class="policy-header">
-          <span class="policy-id">${policy.id}</span>
-          <span class="badge status-badge-${policy.status.toLowerCase()}">${policy.status}</span>
-        </div>
-        <h4>${policy.category} - ${policy.description}</h4>
-        <div class="policy-details">
-          <p><strong>Value Covered:</strong> $${policy.value}</p>
-          <p><strong>Premium Paid:</strong> $${policy.quote.totalPremiumUSD}</p>
-        </div>
-        
-        ${
-          policy.status === "Active"
-            ? `<div class="timer-box">
-                <small>Coverage Remaining:</small>
-                <div class="countdown-timer" id="timer-${policy.id}">Calculating...</div>
-               </div>`
-            : ""
-        }
+  // Fetch exchange rates to perform USD conversions for display[cite: 3]
+  const rates = await fetchExchangeRates(); //[cite: 3]
 
-        <div class="policy-actions">
+  container.innerHTML = policies
+    .map((policy) => {
+      const code = policy.currency || "USD";
+      const symbol = CURRENCY_SYMBOLS[code] || "$";
+      const rate = rates[code] || 1; // Rate relative to USD[cite: 3]
+
+      // Convert values to USD if non-USD currency
+      const valUSD = code !== "USD" ? ` (USD $${(policy.value / rate).toFixed(2)})` : "";
+      const premiumUSD = code !== "USD" ? ` (USD $${(policy.quote.totalPremiumUSD / rate).toFixed(2)})` : "";
+
+      return `
+        <div class="card policy-card status-${policy.status.toLowerCase()}" id="policy-${policy.id}">
+          <div class="policy-header">
+            <span class="policy-id">${policy.id}</span>
+            <span class="badge status-badge-${policy.status.toLowerCase()}">${policy.status}</span>
+          </div>
+          <h4>${policy.category} - ${policy.description}</h4>
+          <div class="policy-details">
+            <p><strong>Value Covered:</strong> ${symbol}${policy.value}${valUSD}</p>
+            <p><strong>Premium Paid:</strong> ${symbol}${policy.quote.totalPremiumUSD}${premiumUSD}</p>
+          </div>
+          
           ${
             policy.status === "Active"
-              ? `<button class="btn btn-secondary btn-claim" data-policy-id="${policy.id}">Submit Claim</button>`
-              : `<button class="btn btn-disabled" disabled>Policy Ended</button>`
+              ? `<div class="timer-box">
+                  <small>Coverage Remaining:</small>
+                  <div class="countdown-timer" id="timer-${policy.id}">Calculating...</div>
+                 </div>`
+              : ""
           }
+
+          <div class="policy-actions" style="display: flex; gap: 10px; margin-top: 10px;">
+            ${
+              policy.status === "Active"
+                ? `<button class="btn btn-secondary btn-claim" data-policy-id="${policy.id}">Submit Claim</button>
+                   <button class="btn btn-danger btn-cancel" data-policy-id="${policy.id}" style="background-color: #dc3545; color: white;">Cancel Policy</button>`
+                : `<button class="btn btn-disabled" disabled>Policy Ended</button>`
+            }
+          </div>
         </div>
-      </div>
-    `
-    )
+      `;
+    })
     .join("");
 
   // Attach event listeners for claims
@@ -114,6 +136,17 @@ export function renderPolicyDashboard(container, policies, onClaimClick) {
       onClaimClick(pId);
     });
   });
+
+  // Attach event listeners for cancellation
+  container.querySelectorAll(".btn-cancel").forEach((btn) => {
+    btn.addEventListener("click", (e) => {
+      const pId = e.target.getAttribute("data-policy-id");
+      if (typeof onCancelClick === "function") {
+        onCancelClick(pId);
+      }
+    });
+  });
+
 
   // Start active timers
   policies.forEach((policy) => {
