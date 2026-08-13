@@ -30,6 +30,9 @@
 * Node.js (v18+ recommended)
 * A Google Gemini API Key
 
+🎓 Course Context
+Developed as the final portfolio capstone project for WDD 330 (Web Frontend Development II) at BYU-Idaho.
+
 ### Installation
 
 1. **Clone the repository:**
